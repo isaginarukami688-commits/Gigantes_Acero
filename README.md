@@ -530,4 +530,4 @@ Closes #<número-de-issue> (HU-XX)
 
 ## 📄 Licencia
 
-Proyecto académico de la UNACH. Define aquí la licencia que prefieras (por ejemplo MIT) y agrega el archivo `LICENSE` al repositorio.
+Proyecto académico de la UNACH. 
