@@ -1,0 +1,41 @@
+﻿# Flutter
+frontend-mobile/.dart_tool/
+frontend-mobile/build/
+frontend-mobile/.flutter-plugins
+frontend-mobile/.flutter-plugins-dependencies
+frontend-mobile/.packages
+frontend-mobile/.pub-cache/
+frontend-mobile/android/.gradle/
+frontend-mobile/android/local.properties
+
+# Android
+*.jks
+*.keystore
+key.properties
+
+# Java / Maven
+backend/target/
+**/target/
+
+# Archivos privados
+.env
+.env.*
+!.env.example
+**/application-local.properties
+**/secrets/
+**/credentials/
+
+# Editores y sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Copia comprimida
+frontend-mobile.zip
+
+backend/src/main/java/mx/unach/gigantesacero/GenerarHashAura.java
+
+backend/src/main/java/mx/unach/gigantesacero/GenerarHash.java
+
+frontend-mobile/lib/screens/escaner_qr copy.dart
