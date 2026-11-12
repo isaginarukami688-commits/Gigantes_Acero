@@ -46,13 +46,3 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
-
-# Archivos de compilación de pruebas
-/build_prueba/
-
-# Configuración local del editor
-.vscode/
-/build_anterior/
-/build_prueba/
-/app/intermediates/
-/app/kotlin/
