@@ -66,10 +66,13 @@ public class App {
                     return;
                 }
 
+                String token = JwtService.generarToken(usuario);
+
                 ctx.status(200);
                 ctx.json(Map.of(
                     "mensaje", "Inicio de sesión exitoso",
-                    "usuario", usuario
+                    "usuario", usuario,
+                    "token", token
                 ));
 
             } catch (Exception e) {
@@ -517,10 +520,13 @@ public class App {
         });
 
         // Iniciar servidor
-        app.start(7001);
+        int port = Integer.parseInt(
+            System.getenv().getOrDefault("PORT", "7001")
+        );
+        app.start("0.0.0.0", port);
 
         System.out.println(
-            "Backend de respaldo iniciado en http://localhost:7001"
+            "Backend iniciado en el puerto " + port
         );
     }
 

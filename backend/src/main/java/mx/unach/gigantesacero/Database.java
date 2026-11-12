@@ -31,8 +31,8 @@ public class Database {
     }
 
     public static Connection getConnection() throws SQLException {
-        String url = properties.getProperty("db.url");
-        String username = properties.getProperty("db.username");
+        String url = System.getenv().getOrDefault("DB_URL", properties.getProperty("db.url"));
+        String username = System.getenv().getOrDefault("DB_USERNAME", properties.getProperty("db.username"));
         String password = System.getenv("DB_PASSWORD");
 
         if (password == null || password.isBlank()) {
