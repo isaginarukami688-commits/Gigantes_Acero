@@ -100,4 +100,92 @@ public class PrestamoService {
 
         return prestamos;
     }
+    public static void devolverPrestamo(long usuarioId, long prestamoId,
+            String observaciones) throws Exception {
+        try (Connection c = Database.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                long equipoId;
+                try (PreparedStatement ps = c.prepareStatement("""
+                    SELECT equipo_id, estado,
+                           (fecha_prestamo <= CURRENT_TIMESTAMP) AS iniciado
+                    FROM prestamos
+                    WHERE id = ? AND usuario_id = ?
+                    FOR UPDATE
+                """)) {
+                    ps.setLong(1, prestamoId);
+                    ps.setLong(2, usuarioId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) throw new IllegalArgumentException(
+                            "No existe ese préstamo para este usuario");
+                        if (!"ACTIVO".equals(rs.getString("estado")))
+                            throw new IllegalArgumentException("El préstamo ya fue devuelto");
+                        if (!rs.getBoolean("iniciado"))
+                            throw new IllegalArgumentException(
+                                "El préstamo aún no ha comenzado; no se puede registrar la devolución");
+                        equipoId = rs.getLong("equipo_id");
+                    }
+                }
+
+                String estadoAnterior;
+                try (PreparedStatement ps = c.prepareStatement(
+                        "SELECT estado FROM equipos WHERE id = ? FOR UPDATE")) {
+                    ps.setLong(1, equipoId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) throw new IllegalArgumentException("El equipo no existe");
+                        estadoAnterior = rs.getString("estado");
+                    }
+                }
+
+                try (PreparedStatement ps = c.prepareStatement("""
+                    UPDATE prestamos
+                    SET estado = 'DEVUELTO',
+                        fecha_devolucion_real = CURRENT_TIMESTAMP,
+                        observaciones = COALESCE(?, observaciones)
+                    WHERE id = ? AND usuario_id = ? AND estado = 'ACTIVO'
+                """)) {
+                    ps.setString(1, observaciones);
+                    ps.setLong(2, prestamoId);
+                    ps.setLong(3, usuarioId);
+                    if (ps.executeUpdate() != 1)
+                        throw new IllegalArgumentException("No se pudo registrar la devolución");
+                }
+
+                try (PreparedStatement ps = c.prepareStatement("""
+                    UPDATE equipos
+                    SET estado = CASE
+                        WHEN activo = FALSE OR estado = 'BAJA' THEN 'BAJA'
+                        WHEN estado = 'MANTENIMIENTO' THEN 'MANTENIMIENTO'
+                        ELSE 'DISPONIBLE'
+                    END
+                    WHERE id = ?
+                """)) {
+                    ps.setLong(1, equipoId);
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = c.prepareStatement("""
+                    INSERT INTO historial_estados
+                        (equipo_id, usuario_id, estado_anterior, estado_nuevo, observaciones)
+                    SELECT p.equipo_id, ?, ?, e.estado, ?
+                    FROM prestamos p
+                    JOIN equipos e ON e.id = p.equipo_id
+                    WHERE p.id = ?
+                """)) {
+                    ps.setLong(1, usuarioId);
+                    ps.setString(2, estadoAnterior);
+                    ps.setString(3, observaciones);
+                    ps.setLong(4, prestamoId);
+                    ps.executeUpdate();
+                }
+
+                c.commit();
+            } catch (Exception e) {
+                c.rollback();
+                throw e;
+            } finally {
+                c.setAutoCommit(true);
+            }
+        }
+    }
 }

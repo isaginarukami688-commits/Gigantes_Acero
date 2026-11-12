@@ -67,6 +67,47 @@ class _HistorialPrestamosState extends State<HistorialPrestamos> {
     }
   }
 
+  Future<void> _devolver(Map<String, dynamic> prestamo) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Devolver equipo'),
+        content: Text(
+          '¿Confirmas que deseas registrar la devolución de ${prestamo['equipoNombre']}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok != true) return;
+
+    try {
+      final mensaje = await ApiService.devolverPrestamoUsuario(
+        widget.usuarioId,
+        (prestamo['id'] as num).toInt(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mensaje)),
+      );
+      setState(_cargarPrestamos);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -201,6 +242,17 @@ class _HistorialPrestamosState extends State<HistorialPrestamos> {
                           Text(
                             'Observaciones: ${prestamo['observaciones']}',
                           ),
+                        if (estado.toUpperCase() == 'ACTIVO') ...[
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: FilledButton.icon(
+                              onPressed: () => _devolver(prestamo),
+                              icon: const Icon(Icons.assignment_return),
+                              label: const Text('Devolver equipo'),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
