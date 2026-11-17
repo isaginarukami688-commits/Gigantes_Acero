@@ -1,0 +1,86 @@
+﻿# Secretos y configuraciones privadas
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.jks
+*.keystore
+secrets/
+credentials/
+
+# Java / Maven
+backend/target/
+
+# Flutter / Dart
+frontend-mobile/build/
+frontend-mobile/.dart_tool/
+frontend-mobile/.flutter-plugins
+frontend-mobile/.flutter-plugins-dependencies
+frontend-mobile/.packages
+frontend-mobile/android/local.properties
+
+# Android
+**/key.properties
+**/keystore.properties
+
+# Node
+node_modules/
+
+# IDE y sistema
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Respaldos y archivos de bases de datos
+*.dump
+*.backup
+*.bak
+*.sqlite
+*.sqlite3
+database/backups/
+
+# Respaldos de codigo
+*.bak
+*.historial_backup
+* copy.dart
+
+# Archivos generados
+backend/target/
+frontend-mobile/build/
+frontend-mobile/.dart_tool/
+
+
+# Archivos generados y locales
+backend/target/
+frontend-mobile/build/
+frontend-mobile/.dart_tool/
+frontend-mobile/.flutter-plugins-dependencies
+frontend-mobile/android/local.properties
+frontend-mobile/android/.kotlin/
+frontend-mobile/.idea/
+
+# Respaldos y archivos temporales
+*.dump
+*.bak
+*.backup
+*.respaldo
+*historial_backup*
+*_backup*
+*.zip
+
+# Paquetes de instalación
+*.apk
+*.aab
+
+# Variables de entorno
+.env
+.env.*
+
+# Utilidades locales de generación de hashes
+backend/src/main/java/mx/unach/gigantesacero/GenerarHash.java
+backend/src/main/java/mx/unach/gigantesacero/GenerarHashAura.java
+
+# Notas locales de integracion
+README_INTEGRACION.txt

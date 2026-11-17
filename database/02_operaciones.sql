@@ -1,0 +1,6 @@
+-- IMPORTANTE:
+-- Este archivo anterior duplicaba las tablas definidas en 01_schema.sql.
+-- No ejecutar nuevamente CREATE TABLE aquí.
+-- Para una instalación nueva, ejecutar únicamente 01_schema.sql.
+-- Para una base existente, conservar los datos y aplicar únicamente
+-- migraciones puntuales cuando sean necesarias.
