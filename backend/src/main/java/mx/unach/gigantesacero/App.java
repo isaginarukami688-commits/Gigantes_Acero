@@ -10,8 +10,19 @@ import java.util.Map;
 public class App {
 
     public static void main(String[] args) {
+        String webOrigin = System.getenv().getOrDefault(
+            "WEB_ORIGIN",
+            "https://isaginarukami688-commits.github.io"
+        );
         Javalin app = Javalin.create(config -> {
             config.http.defaultContentType = "application/json";
+            config.bundledPlugins.enableCors(cors -> cors.addRule(rule ->
+                rule.allowHost(
+                    webOrigin,
+                    "http://localhost:5000",
+                    "http://127.0.0.1:5000"
+                )
+            ));
         });
 
         // Ruta principal

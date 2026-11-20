@@ -1,9 +1,12 @@
-
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 class ApiService {
- static const String baseUrl = 'https://germicide-unknowing-delete.ngrok-free.dev';
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://germicide-unknowing-delete.ngrok-free.dev',
+  );
   // Comprobar la conexiÃ³n con el backend.
   static Future<bool> comprobarBackend() async {
     try {
@@ -100,6 +103,7 @@ class ApiService {
       };
     }
   }
+
   // Consultar los equipos registrados en la base de datos.
   static Future<List<Map<String, dynamic>>> listarEquipos() async {
     final respuesta = await http
@@ -191,17 +195,12 @@ class ApiService {
     }
   }
 
-  
   // Consultar las solicitudes de un estudiante.
   static Future<List<Map<String, dynamic>>> listarSolicitudes(
     int usuarioId,
   ) async {
     final respuesta = await http
-        .get(
-          Uri.parse(
-            '$baseUrl/api/v1/usuarios/$usuarioId/solicitudes',
-          ),
-        )
+        .get(Uri.parse('$baseUrl/api/v1/usuarios/$usuarioId/solicitudes'))
         .timeout(const Duration(seconds: 10));
 
     if (respuesta.statusCode != 200) {
@@ -214,19 +213,14 @@ class ApiService {
     return lista
         .map((solicitud) => Map<String, dynamic>.from(solicitud as Map))
         .toList();
-
   }
 
-    // Consultar el historial de prÃ©stamos de un estudiante.
+  // Consultar el historial de prÃ©stamos de un estudiante.
   static Future<List<Map<String, dynamic>>> listarPrestamos(
     int usuarioId,
   ) async {
     final respuesta = await http
-        .get(
-          Uri.parse(
-            '$baseUrl/api/v1/usuarios/$usuarioId/prestamos',
-          ),
-        )
+        .get(Uri.parse('$baseUrl/api/v1/usuarios/$usuarioId/prestamos'))
         .timeout(const Duration(seconds: 10));
 
     if (respuesta.statusCode != 200) {
@@ -241,21 +235,20 @@ class ApiService {
         .toList();
   }
 
-
   // Consultar todas las solicitudes como administrador.
   static Future<List<Map<String, dynamic>>> listarSolicitudesAdmin(
     int administradorId,
   ) async {
-    final respuesta = await http.get(
-      Uri.parse(
-        '$baseUrl/api/v1/admin/$administradorId/solicitudes',
-      ),
-    ).timeout(const Duration(seconds: 10));
+    final respuesta = await http
+        .get(Uri.parse('$baseUrl/api/v1/admin/$administradorId/solicitudes'))
+        .timeout(const Duration(seconds: 10));
 
     final datos = jsonDecode(respuesta.body);
 
     if (respuesta.statusCode != 200) {
-      throw Exception(datos['error'] ?? 'No se pudieron consultar las solicitudes');
+      throw Exception(
+        datos['error'] ?? 'No se pudieron consultar las solicitudes',
+      );
     }
 
     return (datos['solicitudes'] as List)
@@ -268,11 +261,7 @@ class ApiService {
     int administradorId,
     int solicitudId,
   ) async {
-    return _resolverSolicitud(
-      administradorId,
-      solicitudId,
-      'aprobar',
-    );
+    return _resolverSolicitud(administradorId, solicitudId, 'aprobar');
   }
 
   // Rechazar una solicitud.
@@ -280,11 +269,7 @@ class ApiService {
     int administradorId,
     int solicitudId,
   ) async {
-    return _resolverSolicitud(
-      administradorId,
-      solicitudId,
-      'rechazar',
-    );
+    return _resolverSolicitud(administradorId, solicitudId, 'rechazar');
   }
 
   static Future<String> _resolverSolicitud(
@@ -292,13 +277,15 @@ class ApiService {
     int solicitudId,
     String accion,
   ) async {
-    final respuesta = await http.post(
-      Uri.parse(
-        '$baseUrl/api/v1/admin/$administradorId/solicitudes/$solicitudId/$accion',
-      ),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'observaciones': ''}),
-    ).timeout(const Duration(seconds: 10));
+    final respuesta = await http
+        .post(
+          Uri.parse(
+            '$baseUrl/api/v1/admin/$administradorId/solicitudes/$solicitudId/$accion',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'observaciones': ''}),
+        )
+        .timeout(const Duration(seconds: 10));
 
     final datos = jsonDecode(respuesta.body);
 
@@ -309,80 +296,129 @@ class ApiService {
     return datos['mensaje'] ?? 'OperaciÃ³n realizada correctamente';
   }
 
-
-
   // Funciones administrativas
-  static Future<List<Map<String, dynamic>>> listarEquiposAdmin(int adminId) async {
-    final r = await http.get(Uri.parse('$baseUrl/api/v1/admin/$adminId/equipos'))
+  static Future<List<Map<String, dynamic>>> listarEquiposAdmin(
+    int adminId,
+  ) async {
+    final r = await http
+        .get(Uri.parse('$baseUrl/api/v1/admin/$adminId/equipos'))
         .timeout(const Duration(seconds: 10));
     final d = jsonDecode(r.body);
-    if (r.statusCode != 200) throw Exception(d['error'] ?? 'No se pudieron cargar los equipos');
-    return (d['equipos'] as List).map((e) => Map<String,dynamic>.from(e as Map)).toList();
+    if (r.statusCode != 200)
+      throw Exception(d['error'] ?? 'No se pudieron cargar los equipos');
+    return (d['equipos'] as List)
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
   }
 
-  static Future<String> guardarEquipo(int adminId, Map<String,dynamic> equipo, {int? equipoId}) async {
-    final uri = Uri.parse('$baseUrl/api/v1/admin/$adminId/equipos${equipoId == null ? '' : '/$equipoId'}');
+  static Future<String> guardarEquipo(
+    int adminId,
+    Map<String, dynamic> equipo, {
+    int? equipoId,
+  }) async {
+    final uri = Uri.parse(
+      '$baseUrl/api/v1/admin/$adminId/equipos${equipoId == null ? '' : '/$equipoId'}',
+    );
     final r = equipoId == null
-        ? await http.post(uri, headers: {'Content-Type':'application/json'}, body: jsonEncode(equipo))
-        : await http.put(uri, headers: {'Content-Type':'application/json'}, body: jsonEncode(equipo));
+        ? await http.post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(equipo),
+          )
+        : await http.put(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(equipo),
+          );
     final d = jsonDecode(r.body);
-    if (r.statusCode != 200 && r.statusCode != 201) throw Exception(d['error'] ?? 'No se pudo guardar el equipo');
+    if (r.statusCode != 200 && r.statusCode != 201)
+      throw Exception(d['error'] ?? 'No se pudo guardar el equipo');
     return d['mensaje'] ?? 'Equipo guardado';
   }
 
   static Future<String> eliminarEquipo(int adminId, int equipoId) async {
-    final r = await http.delete(Uri.parse('$baseUrl/api/v1/admin/$adminId/equipos/$equipoId'))
+    final r = await http
+        .delete(Uri.parse('$baseUrl/api/v1/admin/$adminId/equipos/$equipoId'))
         .timeout(const Duration(seconds: 10));
     final d = jsonDecode(r.body);
-    if (r.statusCode != 200) throw Exception(d['error'] ?? 'No se pudo dar de baja');
+    if (r.statusCode != 200)
+      throw Exception(d['error'] ?? 'No se pudo dar de baja');
     return d['mensaje'] ?? 'Equipo dado de baja';
   }
 
-  static Future<List<Map<String,dynamic>>> listarPrestamosAdmin(int adminId) async {
-    final r = await http.get(Uri.parse('$baseUrl/api/v1/admin/$adminId/prestamos'))
+  static Future<List<Map<String, dynamic>>> listarPrestamosAdmin(
+    int adminId,
+  ) async {
+    final r = await http
+        .get(Uri.parse('$baseUrl/api/v1/admin/$adminId/prestamos'))
         .timeout(const Duration(seconds: 10));
     final d = jsonDecode(r.body);
-    if (r.statusCode != 200) throw Exception(d['error'] ?? 'No se pudieron cargar los prÃ©stamos');
-    return (d['prestamos'] as List).map((e) => Map<String,dynamic>.from(e as Map)).toList();
+    if (r.statusCode != 200)
+      throw Exception(d['error'] ?? 'No se pudieron cargar los prÃ©stamos');
+    return (d['prestamos'] as List)
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
   }
 
-  static Future<String> devolverPrestamo(int adminId, int prestamoId, {String observaciones = ''}) async {
-    final r = await http.post(
-      Uri.parse('$baseUrl/api/v1/admin/$adminId/prestamos/$prestamoId/devolver'),
-      headers: {'Content-Type':'application/json'},
-      body: jsonEncode({'observaciones': observaciones}),
-    ).timeout(const Duration(seconds: 10));
+  static Future<String> devolverPrestamo(
+    int adminId,
+    int prestamoId, {
+    String observaciones = '',
+  }) async {
+    final r = await http
+        .post(
+          Uri.parse(
+            '$baseUrl/api/v1/admin/$adminId/prestamos/$prestamoId/devolver',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'observaciones': observaciones}),
+        )
+        .timeout(const Duration(seconds: 10));
     final d = jsonDecode(r.body);
-    if (r.statusCode != 200) throw Exception(d['error'] ?? 'No se pudo registrar la devoluciÃ³n');
+    if (r.statusCode != 200)
+      throw Exception(d['error'] ?? 'No se pudo registrar la devoluciÃ³n');
     return d['mensaje'] ?? 'DevoluciÃ³n registrada';
   }
 
-  static Future<List<Map<String,dynamic>>> listarHistorialEstadosAdmin(int adminId) async {
-    final r = await http.get(
-      Uri.parse('$baseUrl/api/v1/admin/$adminId/historial-estados'),
-    ).timeout(const Duration(seconds: 10));
+  static Future<List<Map<String, dynamic>>> listarHistorialEstadosAdmin(
+    int adminId,
+  ) async {
+    final r = await http
+        .get(Uri.parse('$baseUrl/api/v1/admin/$adminId/historial-estados'))
+        .timeout(const Duration(seconds: 10));
 
     final d = jsonDecode(r.body);
     if (r.statusCode != 200) {
-      throw Exception(d['error'] ?? 'No se pudo cargar el historial de estados');
+      throw Exception(
+        d['error'] ?? 'No se pudo cargar el historial de estados',
+      );
     }
 
     return (d['historial'] as List)
-        .map((e) => Map<String,dynamic>.from(e as Map))
+        .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
   }
-  static Future<List<Map<String,dynamic>>> listarQrAdmin(int adminId) async {
-    final r = await http.get(Uri.parse('$baseUrl/api/v1/admin/$adminId/qr'))
+
+  static Future<List<Map<String, dynamic>>> listarQrAdmin(int adminId) async {
+    final r = await http
+        .get(Uri.parse('$baseUrl/api/v1/admin/$adminId/qr'))
         .timeout(const Duration(seconds: 10));
     final d = jsonDecode(r.body);
-    if (r.statusCode != 200) throw Exception(d['error'] ?? 'No se pudieron cargar los QR');
-    return (d['equipos'] as List).map((e) => Map<String,dynamic>.from(e as Map)).toList();
+    if (r.statusCode != 200)
+      throw Exception(d['error'] ?? 'No se pudieron cargar los QR');
+    return (d['equipos'] as List)
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
   }
 
   static Future<String> reactivarEquipo(int adminId, int equipoId) async {
-    final r = await http.post(
-      Uri.parse('$baseUrl/api/v1/admin/$adminId/equipos/$equipoId/reactivar'),
-    ).timeout(const Duration(seconds: 10));
+    final r = await http
+        .post(
+          Uri.parse(
+            '$baseUrl/api/v1/admin/$adminId/equipos/$equipoId/reactivar',
+          ),
+        )
+        .timeout(const Duration(seconds: 10));
     final d = jsonDecode(r.body);
     if (r.statusCode != 200) {
       throw Exception(d['error'] ?? 'No se pudo reactivar el equipo');
@@ -395,11 +431,15 @@ class ApiService {
     int prestamoId, {
     String observaciones = '',
   }) async {
-    final r = await http.post(
-      Uri.parse('$baseUrl/api/v1/usuarios/$usuarioId/prestamos/$prestamoId/devolver'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'observaciones': observaciones}),
-    ).timeout(const Duration(seconds: 10));
+    final r = await http
+        .post(
+          Uri.parse(
+            '$baseUrl/api/v1/usuarios/$usuarioId/prestamos/$prestamoId/devolver',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'observaciones': observaciones}),
+        )
+        .timeout(const Duration(seconds: 10));
     final d = jsonDecode(r.body);
     if (r.statusCode != 200) {
       throw Exception(d['error'] ?? 'No se pudo devolver el equipo');

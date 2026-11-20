@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'screens/catalogo_equipos.dart';
 import 'screens/escaner_qr.dart';
@@ -46,10 +47,10 @@ class PantallaSeleccionAcceso extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.qr_code_scanner,
-                  size: 90,
-                  color: Colors.blue,
+                Image.asset(
+                  'assets/images/gigantes_acero_logo.png',
+                  height: 150,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 20),
                 const Text(
@@ -155,10 +156,10 @@ class _PantallaLoginState extends State<PantallaLogin> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.school,
-                  size: 80,
-                  color: Colors.blue,
+                Image.asset(
+                  'assets/images/gigantes_acero_logo.png',
+                  height: 130,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 16),
 
@@ -221,27 +222,6 @@ const SizedBox(height: 16),
 
                 
                 const SizedBox(height: 24),
-OutlinedButton.icon(
-  onPressed: () async {
-    final conectado = await ApiService.comprobarBackend();
-
-    if (!context.mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          conectado
-              ? 'Conexión con el backend exitosa'
-              : 'No se pudo conectar con el backend',
-        ),
-      ),
-    );
-  },
-  icon: const Icon(Icons.cloud_outlined),
-  label: const Text('Probar conexión con el servidor'),
-),
-
-const SizedBox(height: 12),
                 if (widget.rolEsperado == 3) ...[
                   OutlinedButton(
                     onPressed: () {
@@ -512,6 +492,19 @@ Widget build(BuildContext context) {
         );
       },
     ),
+  IconButton(
+  icon: const Icon(Icons.logout),
+  tooltip: 'Cerrar sesión',
+  onPressed: () {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PantallaSeleccionAcceso(),
+      ),
+      (route) => false,
+    );
+  },
+),
   ],
 ),
       body: SafeArea(
@@ -542,12 +535,13 @@ Widget build(BuildContext context) {
                 descripcion: 'Consulta equipos disponibles',
               ),
 
-              _crearOpcion(
-                context,
-                icono: Icons.qr_code_scanner,
-                titulo: 'Escanear QR',
-                descripcion: 'Identifica un equipo',
-              ),
+              if (!kIsWeb)
+                _crearOpcion(
+                  context,
+                  icono: Icons.qr_code_scanner,
+                  titulo: 'Escanear QR',
+                  descripcion: 'Identifica un equipo',
+                ),
 
               _crearOpcion(
                 context,
@@ -619,7 +613,9 @@ onTap: () {
   } else if (titulo.contains('Escanear QR')) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => const EscanerQR(),
+        builder: (_) => EscanerQR(
+  usuarioId: (usuario['id'] as num).toInt(),
+),
       ),
     );
   } else if (titulo == 'Mis solicitudes') {
@@ -692,6 +688,19 @@ class PantallaAdministrador extends StatelessWidget {
               );
             },
           ),
+        IconButton(
+  icon: const Icon(Icons.logout),
+  tooltip: 'Cerrar sesión',
+  onPressed: () {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PantallaSeleccionAcceso(),
+      ),
+      (route) => false,
+    );
+  },
+),
         ],
       ),
       body: SafeArea(

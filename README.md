@@ -1,4 +1,4 @@
-# 📱 Sistema Móvil de Préstamo de Equipos mediante Códigos QR
+# 📱 Sistema de Préstamo de Equipos — App móvil y web
 
 ![Versión](https://img.shields.io/badge/versi%C3%B3n-7.1-blue)
 ![Backend](https://img.shields.io/badge/backend-Javalin-orange)
@@ -353,31 +353,28 @@ La documentación interactiva se expone con **Swagger UI** (OpenAPI) en el backe
 │   ├── arquitectura_soa/          # Diagramas UML 2.0 y C4
 │   ├── base_datos_distribuida/    # Scripts DDL/DML PostgreSQL y diagramas DER
 │   └── estimaciones/              # Hojas de cálculo PERT y COCOMO
-├── backend-javalin/
-│   ├── src/main/java/             # Controladores, servicios y DAOs
-│   ├── Dockerfile                 # Contenedor del backend
-│   └── pom.xml                    # Dependencias Maven (Javalin, HikariCP, Jackson)
+├── backend/
+│   ├── src/main/java/             # Backend REST en Java/Javalin
+│   └── pom.xml                    # Dependencias y compilación Maven
+├── database/                      # Esquema y operaciones PostgreSQL
 ├── frontend-mobile/
-│   ├── lib/                       # Flutter: vistas, widgets, servicios REST, escáner QR
+│   ├── lib/                       # Flutter: app móvil/web y servicios REST
+│   ├── web/                       # Entrada para compilar a web
 │   └── pubspec.yaml
-├── frontend-web/
-│   └── src/                       # Panel web de administración
-├── infra/                         # docker-compose.yml y configuración del clúster PostgreSQL
-├── .github/                       # Workflows de CI y plantilla de Pull Request
+├── .github/workflows/             # Publicación de Flutter web en GitHub Pages
 └── README.md
 ```
 
 ## ⚙️ Instalación y ejecución
 
-> Los comandos son una guía base. Ajusta nombres de archivos, versiones y variables a lo que exista realmente en tu repositorio.
+> Los comandos son una guía base. Ajusta la conexión de PostgreSQL y la URL pública de la API a tu despliegue.
 
 ### Requisitos previos
 
 - Git
-- Docker y Docker Compose
-- JDK (versión según tu `pom.xml`) y Maven
-- Flutter SDK (para la app móvil)
-- Node.js (solo si el panel web usa React o Vue)
+- PostgreSQL
+- JDK 21 y Maven
+- Flutter SDK (para la app móvil y web)
 
 ### 1. Clonar el repositorio
 
@@ -386,36 +383,19 @@ git clone https://github.com/<usuario>/<repositorio>.git
 cd <repositorio>
 ```
 
-### 2. Variables de entorno
+### 2. Configurar PostgreSQL y el backend
 
-Crea un archivo `.env` en `/infra` (ejemplo, valores de muestra):
+El backend lee la conexión desde `backend/src/main/resources/application.properties`. Ajusta el URL y usuario a tu instalación de PostgreSQL y define `DB_PASSWORD` en el entorno donde se ejecuta. La base configurada por defecto es `gigantes_acero_respaldo`.
 
-```env
-POSTGRES_USER=prestamos_admin
-POSTGRES_PASSWORD=cambia_esta_contraseña
-POSTGRES_DB=prestamos_qr
-JWT_SECRET=cambia_este_secreto
-```
-
-> ⚠️ No subas el archivo `.env` al repositorio. Agrégalo a `.gitignore`.
-
-### 3. Levantar el clúster PostgreSQL y el backend
+### 3. Backend (modo desarrollo)
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d
+cd backend
+mvn package
+mvn exec:java
 ```
 
-Los servicios corren en la red Docker `prestamos_qr_network`.
-
-### 4. Backend (modo desarrollo)
-
-```bash
-cd backend-javalin
-mvn clean package
-java -jar target/<nombre-del-jar>.jar
-```
-
-### 5. App móvil
+### 4. Aplicación móvil y web
 
 ```bash
 cd frontend-mobile
@@ -423,13 +403,23 @@ flutter pub get
 flutter run
 ```
 
-### 6. Panel web
+La versión web comparte las pantallas y el backend de la aplicación. Para ejecutarla localmente:
 
 ```bash
-cd frontend-web
-npm install
-npm run dev
+cd frontend-mobile
+flutter run -d chrome
 ```
+
+En navegador no aparece la opción de escanear códigos QR. Para compilarla para GitHub Pages:
+
+```bash
+cd frontend-mobile
+flutter build web --release --base-href "/Gigantes_Acero/"
+```
+
+El workflow `.github/workflows/deploy-web.yml` compila y publica la web en GitHub Pages al subir cambios a `main`, `master` o `integrar-actualizacion`. En GitHub, habilita **Settings → Pages → Build and deployment → GitHub Actions**. Si la URL pública de la API cambia, define `API_BASE_URL` en **Settings → Secrets and variables → Actions → Variables** antes de publicar.
+
+La web y la app móvil consultan la misma API y, por tanto, la misma base de datos. GitHub Pages solo aloja los archivos web: el backend y PostgreSQL deben seguir desplegados y accesibles públicamente por HTTPS. Configura en el backend la variable `WEB_ORIGIN` con el origen del sitio publicado (por omisión `https://isaginarukami688-commits.github.io`) para permitir las solicitudes web.
 
 ## 🧪 Pruebas y calidad
 
@@ -439,7 +429,7 @@ npm run dev
 
 ```bash
 # Backend
-cd backend-javalin && mvn test
+cd backend && mvn test
 
 # Móvil
 cd frontend-mobile && flutter test
